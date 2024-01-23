@@ -1,9 +1,9 @@
 const { createReadStream, createWriteStream } = require('node:fs');
 const {
   readdir,
+  readFile,
   unlink,
   appendFile,
-  readFile,
   mkdir,
   stat,
   writeFile,
@@ -11,7 +11,7 @@ const {
 const path = require('node:path');
 
 const crearDirectori = async (dirPath) => {
-  return await mkdir(dirPath, { recursive: true });
+  return mkdir(dirPath, { recursive: true });
 };
 
 const getTempateHTML = async (pathTemplate) => {
@@ -39,9 +39,6 @@ const getTempateHTML = async (pathTemplate) => {
     encoding: 'utf8',
   });
 
-  // Object.keys(filesContents.slice()).forEach(el => contents = contents
-  //   .replace(/\{\{`${el}`\}\}/, filesContents[el]))
-
   contents = contents
     .replace(/\{\{header\}\}/, await filesContents['header'])
     .replace(/\{\{articles\}\}/, await filesContents['articles'])
@@ -53,8 +50,18 @@ const getTempateHTML = async (pathTemplate) => {
   );
 };
 
+const deleteFile = async (path) => {
+  try {
+    await unlink(path);
+    console.log('file deleted');
+  } catch (error) {
+    console.log('🍕');
+  }
+};
+
 async function bundleFile(folder, newFolder, newFile) {
-  await unlink(path.resolve(__dirname, newFolder, newFile));
+  await deleteFile(path.resolve(__dirname, newFolder, newFile));
+
   try {
     const files = await readdir(path.resolve(__dirname, folder), {
       withFileTypes: true,
@@ -81,23 +88,29 @@ async function bundleFile(folder, newFolder, newFile) {
 }
 
 async function copyAssets() {
-  const files = await readdir(path.resolve(__dirname, 'assets'));
+  try {
+    const files = await readdir(path.resolve(__dirname, 'assets'));
 
-  files.forEach(async (el) => {
-    const assetsPath = path.resolve(__dirname, 'project-dist', 'assets', el);
+    files.forEach(async (el) => {
+      const assetsPath = path.resolve(__dirname, 'project-dist', 'assets', el);
 
-    await crearDirectori(assetsPath);
+      await crearDirectori(assetsPath);
 
-    if ((await stat(assetsPath)).isDirectory()) {
-      const assetsFiles = await readdir(path.resolve(__dirname, 'assets', el));
+      if ((await stat(assetsPath)).isDirectory()) {
+        const assetsFiles = await readdir(
+          path.resolve(__dirname, 'assets', el),
+        );
 
-      assetsFiles.forEach((it) => {
-        createReadStream(path.resolve(__dirname, 'assets', el))
-          .setEncoding('utf-8')
-          .pipe(createWriteStream(path.resolve(assetsPath, it)));
-      });
-    }
-  });
+        assetsFiles.forEach((it) => {
+          createReadStream(path.resolve(__dirname, 'assets', el))
+            .setEncoding('utf-8')
+            .pipe(createWriteStream(path.resolve(assetsPath, it)));
+        });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function init() {
