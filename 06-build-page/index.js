@@ -38,14 +38,14 @@ const getTempateHTML = async (pathTemplate) => {
   let contents = await readFile(path.resolve(__dirname, 'template.html'), {
     encoding: 'utf8',
   });
-
+  console.log(contents);
   contents = contents
     .replace(/\{\{header\}\}/, await filesContents['header'])
     .replace(/\{\{articles\}\}/, await filesContents['articles'])
     .replace(/\{\{footer\}\}/, await filesContents['footer']);
 
   await writeFile(
-    path.resolve(__dirname, pathTemplate, 'template.html'),
+    path.resolve(__dirname, pathTemplate, 'index.html'),
     contents,
   );
 };

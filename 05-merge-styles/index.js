@@ -81,12 +81,15 @@ const { readdir, unlink, appendFile, readFile } = require('node:fs/promises');
 const path = require('node:path');
 
 const deleteFile = async (path) => {
-  await unlink(path);
-  console.log('file deleted');
+  try {
+    await unlink(path);
+    console.log('file deleted');
+  } catch (error) {
+    console.log('file not found');
+  }
 };
 
 const myAppendFile = async (path, data) => {
-  console.log(path);
   try {
     await appendFile(path, data);
   } catch (error) {
