@@ -18,6 +18,9 @@ const getTempateHTML = async (pathTemplate) => {
   const files = await readdir(path.resolve(__dirname, 'components'), {
     withFileTypes: true,
   });
+  let contents = await readFile(path.resolve(__dirname, 'template.html'), {
+    encoding: 'utf8',
+  });
 
   const filesContents = files
     .filter(
@@ -35,14 +38,11 @@ const getTempateHTML = async (pathTemplate) => {
       return acc;
     }, {});
 
-  let contents = await readFile(path.resolve(__dirname, 'template.html'), {
-    encoding: 'utf8',
-  });
-  console.log(contents);
-  contents = contents
-    .replace(/\{\{header\}\}/, await filesContents['header'])
-    .replace(/\{\{articles\}\}/, await filesContents['articles'])
-    .replace(/\{\{footer\}\}/, await filesContents['footer']);
+  let keys = Object.keys(filesContents);
+  for (let key of keys) {
+    let re = `{{${key}}}`;
+    contents = contents.replace(re, await filesContents[key]);
+  }
 
   await writeFile(
     path.resolve(__dirname, pathTemplate, 'index.html'),
@@ -55,7 +55,7 @@ const deleteFile = async (path) => {
     await unlink(path);
     console.log('file deleted');
   } catch (error) {
-    console.log('🍕');
+    console.log('file not found');
   }
 };
 
@@ -109,7 +109,7 @@ async function copyAssets() {
       }
     });
   } catch (error) {
-    console.log(error);
+    console.log('🍕');
   }
 }
 
