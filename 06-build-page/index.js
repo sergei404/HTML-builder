@@ -15,39 +15,43 @@ const crearDirectori = async (dirPath) => {
 };
 
 const getTempateHTML = async (pathTemplate) => {
-  const files = await readdir(path.resolve(__dirname, 'components'), {
-    withFileTypes: true,
-  });
-  let contents = await readFile(path.resolve(__dirname, 'template.html'), {
-    encoding: 'utf8',
-  });
+  try {
+    const files = await readdir(path.resolve(__dirname, 'components'), {
+      withFileTypes: true,
+    });
+    let contents = await readFile(path.resolve(__dirname, 'template.html'), {
+      encoding: 'utf8',
+    });
 
-  const filesContents = files
-    .filter(
-      (el) =>
-        el[Object.getOwnPropertySymbols(el)[0]] === 1 &&
-        path.extname(el.name) === '.html',
-    )
-    .reduce((acc, it) => {
-      acc[it.name.slice(0, it.name.lastIndexOf('.'))] = readFile(
-        path.resolve(__dirname, 'components', it.name),
-        {
-          encoding: 'utf8',
-        },
-      );
-      return acc;
-    }, {});
+    const filesContents = files
+      .filter(
+        (el) =>
+          el[Object.getOwnPropertySymbols(el)[0]] === 1 &&
+          path.extname(el.name) === '.html',
+      )
+      .reduce((acc, it) => {
+        acc[it.name.slice(0, it.name.lastIndexOf('.'))] = readFile(
+          path.resolve(__dirname, 'components', it.name),
+          {
+            encoding: 'utf8',
+          },
+        );
+        return acc;
+      }, {});
 
-  let keys = Object.keys(filesContents);
-  for (let key of keys) {
-    let re = `{{${key}}}`;
-    contents = contents.replace(re, await filesContents[key]);
+    let keys = Object.keys(filesContents);
+    for (let key of keys) {
+      let re = `{{${key}}}`;
+      contents = contents.replace(re, await filesContents[key]);
+    }
+
+    await writeFile(
+      path.resolve(__dirname, pathTemplate, 'index.html'),
+      contents,
+    );
+  } catch (error) {
+    console.log('🍕');
   }
-
-  await writeFile(
-    path.resolve(__dirname, pathTemplate, 'index.html'),
-    contents,
-  );
 };
 
 const deleteFile = async (path) => {
@@ -55,7 +59,7 @@ const deleteFile = async (path) => {
     await unlink(path);
     console.log('file deleted');
   } catch (error) {
-    console.log('file not found');
+    console.log('🍕');
   }
 };
 
@@ -83,7 +87,7 @@ async function bundleFile(folder, newFolder, newFile) {
       await appendFile(path.resolve(__dirname, newFolder, newFile), contents);
     }
   } catch (err) {
-    console.error(err);
+    console.error('🍕');
   }
 }
 
@@ -101,10 +105,12 @@ async function copyAssets() {
           path.resolve(__dirname, 'assets', el),
         );
 
-        assetsFiles.forEach((it) => {
-          createReadStream(path.resolve(__dirname, 'assets', el))
+        assetsFiles.forEach(async (it) => {
+          let sourse = path.resolve(__dirname, 'assets', el);
+          let dist = path.resolve(assetsPath, it);
+          createReadStream(sourse)
             .setEncoding('utf-8')
-            .pipe(createWriteStream(path.resolve(assetsPath, it)));
+            .pipe(createWriteStream(dist));
         });
       }
     });
@@ -125,7 +131,7 @@ async function init() {
       await copyAssets();
     }
   } catch (err) {
-    console.log(err);
+    console.log('🍕');
   }
 }
 
